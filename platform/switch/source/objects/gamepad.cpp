@@ -200,7 +200,12 @@ const char* Gamepad::GetName() const
 
 size_t Gamepad::GetAxisCount() const
 {
-    return this->IsConnected() ? 12 : 0;
+    if ((this->style & HidNpadStyleTag_NpadFullKey) || (this->style & HidNpadStyleTag_NpadHandheld) || (this->style & HidNpadStyleTag_NpadJoyLeft) || (this->style & HidNpadStyleTag_NpadJoyRight))
+        return 15;
+    else if (this->style & HidNpadStyleTag_NpadJoyDual)
+        return 24;
+    
+    return 0;
 }
 
 size_t Gamepad::GetButtonCount() const
@@ -255,41 +260,51 @@ float Gamepad::GetAxis(size_t axis) const
     {
         HidSixAxisSensorState sixAxisState = { 0 };
 
-        if (this->style & HidNpadStyleTag_NpadFullKey)
+        if ((this->style & HidNpadStyleTag_NpadFullKey)
+            || (this->style & HidNpadStyleTag_NpadHandheld)
+            || (this->style & HidNpadStyleTag_NpadJoyLeft) 
+            || (this->style & HidNpadStyleTag_NpadJoyRight)) 
+        {
+            axis -= 6;
             hidGetSixAxisSensorStates(this->sixAxisHandles[0], &sixAxisState, 1);
-        else if (this->style & HidNpadStyleTag_NpadHandheld)
-            hidGetSixAxisSensorStates(this->sixAxisHandles[0], &sixAxisState, 1);
+        }
         else if (this->style & HidNpadStyleTag_NpadJoyDual)
         {
-            /*
-            ** For JoyDual, read from either the Left or Right Joy-Con
-            ** depending on which is/are connected
-            */
-
             u32 attributes = padGetAttributes(&pad);
-            if (attributes & HidNpadAttribute_IsRightConnected)
-                hidGetSixAxisSensorStates(sixAxisHandles[1], &sixAxisState, 1);
-            else if (attributes & HidNpadAttribute_IsLeftConnected)
-                hidGetSixAxisSensorStates(sixAxisHandles[0], &sixAxisState, 1);
+            if (axis >= 7 && axis <= 15 && (attributes & HidNpadAttribute_IsLeftConnected)) {
+                axis -= 6;
+                hidGetSixAxisSensorStates(this->sixAxisHandles[0], &sixAxisState, 1);
+            } else if (axis >= 16 && axis <= 24 && (attributes & HidNpadAttribute_IsRightConnected)) {
+                axis -= 15;
+                hidGetSixAxisSensorStates(this->sixAxisHandles[1], &sixAxisState, 1);
+            } else {
+                return 0.0f;
+            }
+        } else { 
+            return 0.0f;
         }
 
-        if (axis >= 7 and axis < 10)
-        {
-            if (axis == 7)
-                return sixAxisState.angle.x;
-            else if (axis == 8)
-                return sixAxisState.angle.y;
-
-            return sixAxisState.angle.z;
-        }
-        else if (axis >= 10 and axis < 13)
-        {
-            if (axis == 7)
+        switch (axis) {
+            case 1:
+                return sixAxisState.angular_velocity.x;
+            case 2:
+                return sixAxisState.angular_velocity.y;
+            case 3:
+                return sixAxisState.angular_velocity.z;
+            case 4:
                 return sixAxisState.acceleration.x;
-            else if (axis == 8)
+            case 5:
                 return sixAxisState.acceleration.y;
-
-            return sixAxisState.acceleration.z;
+            case 6:
+                return sixAxisState.acceleration.z;
+            case 7:
+                return sixAxisState.angle.x;
+            case 8:
+                return sixAxisState.angle.y;
+            case 9:
+                return sixAxisState.angle.z;
+            default:
+                return 0.0f;
         }
     }
 
