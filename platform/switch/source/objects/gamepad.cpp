@@ -267,20 +267,20 @@ float Gamepad::GetAxis(size_t axis) const
             */
 
             u32 attributes = padGetAttributes(&pad);
-            if (attributes & HidNpadAttribute_IsLeftConnected)
-                hidGetSixAxisSensorStates(sixAxisHandles[0], &sixAxisState, 1);
-            else if (attributes & HidNpadAttribute_IsRightConnected)
+            if (attributes & HidNpadAttribute_IsRightConnected)
                 hidGetSixAxisSensorStates(sixAxisHandles[1], &sixAxisState, 1);
+            else if (attributes & HidNpadAttribute_IsLeftConnected)
+                hidGetSixAxisSensorStates(sixAxisHandles[0], &sixAxisState, 1);
         }
 
         if (axis >= 7 and axis < 10)
         {
             if (axis == 7)
-                return sixAxisState.angular_velocity.x;
+                return sixAxisState.angle.x;
             else if (axis == 8)
-                return sixAxisState.angular_velocity.y;
+                return sixAxisState.angle.y;
 
-            return sixAxisState.angular_velocity.z;
+            return sixAxisState.angle.z;
         }
         else if (axis >= 10 and axis < 13)
         {
