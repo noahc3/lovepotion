@@ -16,8 +16,8 @@ namespace love
         static constexpr int HANDHELD_WIDTH  = 0x500;
         static constexpr int HANDHELD_HEIGHT = 0x2D0;
 
-        static constexpr int DOCKED_WIDTH  = 0x780;
-        static constexpr int DOCKED_HEIGHT = 0x438;
+        static constexpr int DOCKED_WIDTH  = 0x500;
+        static constexpr int DOCKED_HEIGHT = 0x2D0;
 
         enum class HacScreen : RenderScreen
         {
